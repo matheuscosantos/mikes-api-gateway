@@ -20,12 +20,12 @@ resource "aws_api_gateway_method" "auth_method" {
 }
 
 resource "aws_api_gateway_integration" "lambda_integration" {
-  rest_api_id = aws_api_gateway_rest_api.mikes-api-gateway.id
-  resource_id = aws_api_gateway_resource.auth_resource.id
-  http_method = aws_api_gateway_method.auth_method.http_method
-  type        = "AWS_PROXY"
+  rest_api_id             = aws_api_gateway_rest_api.mikes-api-gateway.id
+  resource_id             = aws_api_gateway_resource.auth_resource.id
+  http_method             = aws_api_gateway_method.auth_method.http_method
   integration_http_method = "POST"
-  uri         = "arn:aws:lambda:us-east-2:644237782704:function:mikes_lambda_authorizer" 
+  type                    = "AWS_PROXY"
+  uri                     = "arn:aws:lambda:us-east-2:644237782704:function:mikes_lambda_authorizer/prod/POST"
 }
 
 resource "aws_api_gateway_authorizer" "cognito_authorizer" {
