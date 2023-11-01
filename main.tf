@@ -25,8 +25,9 @@ resource "aws_api_gateway_integration" "lambda_integration" {
   http_method             = aws_api_gateway_method.auth_method.http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     =  "arn:aws:lambda:us-east-2:644237782704:function/mikes_lambda_authorizer" 
+  uri                     =  "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:644237782704:function/mikes_lambda_authorizer/invocations" 
 }
+
 
 resource "aws_api_gateway_authorizer" "cognito_authorizer" {
   name                   = "cognito-authorizer"
