@@ -36,27 +36,16 @@ resource "aws_api_gateway_authorizer" "cognito_authorizer" {
   provider_arns           = ["arn:aws:cognito-idp:us-east-2:644237782704:userpool/us-east-2_VaSIQn4mE"]
 }
 
-resource "aws_api_gateway_deployment" "mikes-api-gateway-deployment" {
-  depends_on = [aws_api_gateway_integration.lambda_integration]
-  rest_api_id = aws_api_gateway_rest_api.mikes-api-gateway.id
-  stage_name = "prod"
-}
-
 resource "aws_api_gateway_stage" "prod_stage" {
-  depends_on = [aws_api_gateway_deployment.mikes-api-gateway-deployment]
   stage_name = "prod"
   rest_api_id = aws_api_gateway_rest_api.mikes-api-gateway.id
   deployment_id = aws_api_gateway_deployment.mikes-api-gateway-deployment.id
 }
 
-resource "aws_api_gateway_method_settings" "auth_method_settings" {
+resource "aws_api_gateway_deployment" "mikes-api-gateway-deployment" {
+  depends_on = [aws_api_gateway_integration.lambda_integration]
   rest_api_id = aws_api_gateway_rest_api.mikes-api-gateway.id
-  stage_name = aws_api_gateway_stage.prod_stage.stage_name
-  method_path = aws_api_gateway_resource.auth_resource.path
-
-  settings {
-    logging_level   = "INFO"
-  }
+  stage_name = "prod"
 }
 
 output "api_gateway_invoke_url" {
