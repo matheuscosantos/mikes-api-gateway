@@ -37,7 +37,7 @@ resource "aws_api_gateway_authorizer" "cognito_authorizer" {
   rest_api_id     = aws_api_gateway_rest_api.mikes_api_gateway.id
   type            = "COGNITO_USER_POOLS"
   identity_source = "method.request.header.Authorization"
-  provider_arns   = ["arn:aws:cognito-idp:us-east-2:644237782704:userpool/us-east-2_VaSIQn4mE"]
+  provider_arns   = ["arn:aws:cognito-idp:us-east-2:644237782704:userpool/us-east-2_2BLwlHbmP"]
 }
 
 resource "aws_api_gateway_deployment" "mikes-api-gateway-deployment" {
