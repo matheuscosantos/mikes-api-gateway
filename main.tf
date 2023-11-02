@@ -2,13 +2,13 @@ provider "aws" {
   region = "us-east-2"
 }
 
-data "aws_lambda_function" "mikes_lambda_pre_sign_up" {
-  function_name = "mikes_lambda_pre_sign_up"
+data "aws_lambda_function" "mikes_lambda_authorizer" {
+  function_name = "mikes_lambda_authorizer"
 }
 
 resource "aws_api_gateway_rest_api" "mikes_api_gateway" {
-  id = "mikes-api-gateway"
-  name = "mikes-api-gateway"
+  id = "mikes_api_gateway"
+  name = "mikes_api_gateway"
 }
 
 resource "aws_api_gateway_resource" "auth_resource" {
@@ -72,10 +72,10 @@ resource "aws_api_gateway_deployment" "mikes-api-gateway-deployment" {
 #  })
 #}
 
-resource "aws_lambda_permission" "mikes_lambda_pre_sign_up_permission" {
+resource "aws_lambda_permission" "mikes_lambda_authorizer_permission" {
   statement_id  = "AllowAPIInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = data.aws_lambda_function.mikes_lambda_pre_sign_up.function_name
+  function_name = data.aws_lambda_function.mikes_lambda_authorizer.function_name
   principal     = "apigateway.amazonaws.com"
 
   source_arn = "${aws_api_gateway_rest_api.mikes_api_gateway.execution_arn}/*"
