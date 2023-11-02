@@ -45,3 +45,10 @@ resource "aws_api_gateway_deployment" "mikes-api-gateway-deployment" {
 output "api_gateway_invoke_url" {
   value = aws_api_gateway_deployment.mikes-api-gateway-deployment.invoke_url
 }
+
+resource "aws_iam_policy" "api_gateway_invoke_lambda_policy" {
+  name        = "APIGatewayInvokeLambdaPolicy"
+  description = "Policy to allow API Gateway to invoke Lambda functions"
+  
+  policy = file("policy/lambda_assume_role_policy.json")
+}
