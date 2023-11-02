@@ -55,13 +55,15 @@ resource "aws_iam_policy" "api_gateway_invoke_lambda_policy" {
     Statement = [
       {
         Action = "sts:AssumeRole",
-        Effect = "Allow"
+        Effect = "Allow",
+        Resource = "*"
       },
       {
         Effect = "Allow",
         Action = "lambda:InvokeFunction",
-        Resource = "arn:aws:lambda:us-east-2:644237782704:function:mikes_lambda_authorizer"
+        Resource = "arn:aws:lambda:us-east-2:644237782704:function/mikes_lambda_authorizer"
       }
     ]
   })
 }
+
