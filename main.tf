@@ -49,6 +49,19 @@ output "api_gateway_invoke_url" {
 resource "aws_iam_policy" "api_gateway_invoke_lambda_policy" {
   name        = "APIGatewayInvokeLambdaPolicy"
   description = "Policy to allow API Gateway to invoke Lambda functions"
-  
-  policy = file("policy/api_gateway_policy.json")
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow"
+      },
+      {
+        Effect = "Allow",
+        Action = "lambda:InvokeFunction",
+        Resource = "arn:aws:lambda:us-east-2:644237782704:function:mikes_lambda_authorizer"
+      }
+    ]
+  })
 }
