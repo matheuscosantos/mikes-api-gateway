@@ -7,6 +7,7 @@ data "aws_lambda_function" "mikes_lambda_pre_sign_up" {
 }
 
 resource "aws_api_gateway_rest_api" "mikes_api_gateway" {
+  id = "mikes-api-gateway"
   name = "mikes-api-gateway"
 }
 
