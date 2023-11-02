@@ -7,7 +7,6 @@ data "aws_lambda_function" "mikes_lambda_authorizer" {
 }
 
 resource "aws_api_gateway_rest_api" "mikes_api_gateway" {
-  id = "mikes_api_gateway"
   name = "mikes_api_gateway"
 }
 
