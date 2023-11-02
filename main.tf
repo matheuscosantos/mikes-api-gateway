@@ -66,4 +66,3 @@ resource "aws_iam_policy" "api_gateway_invoke_lambda_policy" {
     ]
   })
 }
-
