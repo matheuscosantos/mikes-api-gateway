@@ -50,5 +50,5 @@ resource "aws_iam_policy" "api_gateway_invoke_lambda_policy" {
   name        = "APIGatewayInvokeLambdaPolicy"
   description = "Policy to allow API Gateway to invoke Lambda functions"
   
-  policy = file("policy/lambda_assume_role_policy.json")
+  policy = file("policy/api_gateway_policy.json")
 }
