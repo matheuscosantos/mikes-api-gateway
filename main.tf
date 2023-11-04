@@ -63,8 +63,10 @@ resource "aws_api_gateway_integration" "get_customer_integration" {
   integration_http_method = "GET"
   type                    = "HTTP_PROXY"
   uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/customers/{cpf}"
+  request_parameters = {
+    "integration.request.path.cpf" = "method.request.path.cpf"
+  }
 }
-
 resource "aws_api_gateway_authorizer" "cognito_authorizer" {
   name            = "cognito-authorizer"
   rest_api_id     = aws_api_gateway_rest_api.mikes_api_gateway.id
