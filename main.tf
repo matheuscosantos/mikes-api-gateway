@@ -98,9 +98,9 @@ resource "aws_api_gateway_integration" "post_customer_integration" {
   resource_id             = aws_api_gateway_resource.customer_resource.id
   http_method             = aws_api_gateway_method.post_customer_method.http_method
   integration_http_method = "POST"
-  type                    = "AWS_PROXY"
+  type                    = "HTTP_PROXY"
 
-  uri = "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:644237782704:function:mikes_lambda_authorizer/invocations"
+  uri = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/customers/"
 
   request_templates = {
     "application/json" = jsonencode({
