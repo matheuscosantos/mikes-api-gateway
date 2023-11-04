@@ -28,6 +28,12 @@ resource "aws_api_gateway_resource" "variable_customer_resource" {
   path_part   = "{cpf}"
 }
 
+resource "aws_api_gateway_resource" "order_resource" {
+  rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
+  parent_id   = aws_api_gateway_rest_api.mikes_api_gateway.root_resource_id
+  path_part   = "orders"
+}
+
 resource "aws_api_gateway_method" "auth_method" {
   rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
   resource_id   = aws_api_gateway_resource.auth_resource.id
@@ -47,12 +53,35 @@ resource "aws_api_gateway_method" "get_variable_customer_method" {
   }
 }
 
+resource "aws_api_gateway_method" "get_orders" {
+  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id   = aws_api_gateway_resource.order_resource.id
+  http_method   = "GET"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+}
+
 resource "aws_api_gateway_request_validator" "validator" {
   name                        = "validator"
   rest_api_id                 = aws_api_gateway_rest_api.mikes_api_gateway.id
   validate_request_body       = true
   validate_request_parameters = true
 }
+
+resource "aws_api_gateway_method" "post_orders" {
+  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id   = aws_api_gateway_resource.order_resource.id
+  http_method   = "POST"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+
+  request_models = {
+    "application/json" = "Empty"
+  }
+
+  request_validator_id = aws_api_gateway_request_validator.validator.id
+}
+
 
 resource "aws_api_gateway_method" "post_customer_method" {
   rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
@@ -105,6 +134,37 @@ resource "aws_api_gateway_integration" "post_customer_integration" {
       "cpf"   = "$input.json('$.cpf')",
       "name"  = "$input.json('$.name')",
       "email" = "$input.json('$.email')"
+    })
+  }
+}
+
+resource "aws_api_gateway_integration" "get_orders_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id             = aws_api_gateway_resource.order_resource.id
+  http_method             = aws_api_gateway_method.get_orders.http_method
+  integration_http_method = "GET"
+  type                    = "HTTP_PROXY"
+  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders"
+  content_handling        = "CONVERT_TO_TEXT"
+  request_parameters      = {
+    "integration.request.path.cpf" = "method.request.path.cpf"
+  }
+}
+
+resource "aws_api_gateway_integration" "post_orders_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id             = aws_api_gateway_resource.order_resource.id
+  http_method             = aws_api_gateway_method.post_orders.http_method
+  integration_http_method = "POST"
+  type                    = "HTTP_PROXY"
+
+  uri = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders/"
+  content_handling        = "CONVERT_TO_TEXT"
+
+  request_templates = {
+    "application/json" = jsonencode({
+      cpf   = "$input.path('$.cpf')",
+      items = "$input.path('$.items')"
     })
   }
 }
