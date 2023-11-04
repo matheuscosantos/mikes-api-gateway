@@ -10,6 +10,13 @@ resource "aws_api_gateway_rest_api" "mikes_api_gateway" {
   name = "mikes_api_gateway"
 }
 
+resource "aws_api_gateway_request_validator" "validator" {
+  name                        = "validator"
+  rest_api_id                 = aws_api_gateway_rest_api.mikes_api_gateway.id
+  validate_request_body       = true
+  validate_request_parameters = true
+}
+
 resource "aws_api_gateway_resource" "auth_resource" {
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
   parent_id   = aws_api_gateway_rest_api.mikes_api_gateway.root_resource_id
@@ -22,22 +29,34 @@ resource "aws_api_gateway_resource" "customer_resource" {
   path_part   = "customers"
 }
 
-resource "aws_api_gateway_resource" "orders_payment_resource" {
+resource "aws_api_gateway_resource" "product_resource" {
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
   parent_id   = aws_api_gateway_rest_api.mikes_api_gateway.root_resource_id
-  path_part   = "orders-payment"
-}
-
-resource "aws_api_gateway_resource" "orders_payment_change_status_resource" {
-  rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
-  parent_id   = aws_api_gateway_rest_api.mikes_api_gateway.root_resource_id
-  path_part   = "{order}"
+  path_part   = "products"
 }
 
 resource "aws_api_gateway_resource" "variable_customer_resource" {
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
   parent_id   = aws_api_gateway_resource.customer_resource.id
   path_part   = "{cpf}"
+}
+
+resource "aws_api_gateway_resource" "order_resource" {
+  rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
+  parent_id   = aws_api_gateway_rest_api.mikes_api_gateway.root_resource_id
+  path_part   = "orders"
+}
+
+resource "aws_api_gateway_resource" "variable_product_resource" {
+  rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
+  parent_id   = aws_api_gateway_resource.product_resource.id
+  path_part   = "category"
+}
+
+resource "aws_api_gateway_resource" "variable_id_product_resource" {
+  rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
+  parent_id   = aws_api_gateway_resource.product_resource.id
+  path_part   = "{id}"
 }
 
 resource "aws_api_gateway_method" "auth_method" {
@@ -59,12 +78,85 @@ resource "aws_api_gateway_method" "get_variable_customer_method" {
   }
 }
 
-resource "aws_api_gateway_request_validator" "validator" {
-  name                        = "validator"
-  rest_api_id                 = aws_api_gateway_rest_api.mikes_api_gateway.id
-  validate_request_body       = true
-  validate_request_parameters = true
+resource "aws_api_gateway_method" "get_orders" {
+  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id   = aws_api_gateway_resource.order_resource.id
+  http_method   = "GET"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
 }
+
+resource "aws_api_gateway_method" "post_orders" {
+  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id   = aws_api_gateway_resource.order_resource.id
+  http_method   = "POST"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+
+  request_models = {
+    "application/json" = "Empty"
+  }
+
+  request_validator_id = aws_api_gateway_request_validator.validator.id
+}
+
+resource "aws_api_gateway_method" "get_variable_product_method" {
+  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id   = aws_api_gateway_resource.variable_product_resource.id
+  http_method   = "GET"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+
+  request_parameters = {
+    "method.request.querystring.value"  = true,
+    "method.request.querystring.active" = true
+  }
+
+  request_validator_id = aws_api_gateway_request_validator.validator.id
+}
+
+resource "aws_api_gateway_method" "post_product_method" {
+  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id   = aws_api_gateway_resource.variable_id_product_resource.id
+  http_method   = "POST"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+
+  request_models = {
+    "application/json" = "Empty"
+  }
+
+  request_validator_id = aws_api_gateway_request_validator.validator.id
+}
+
+resource "aws_api_gateway_method" "put_variable_customer_method" {
+  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id   = aws_api_gateway_resource.variable_id_product_resource.id
+  http_method   = "PUT"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+
+  request_parameters = {
+    "method.request.path.id" = true
+  }
+
+  request_validator_id = aws_api_gateway_request_validator.validator.id
+}
+
+resource "aws_api_gateway_method" "delete_variable_customer_method" {
+  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id   = aws_api_gateway_resource.variable_id_product_resource.id
+  http_method   = "DELETE"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+
+  request_parameters = {
+    "method.request.path.id" = true
+  }
+
+  request_validator_id = aws_api_gateway_request_validator.validator.id
+}
+
 
 resource "aws_api_gateway_method" "post_customer_method" {
   rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
@@ -141,8 +233,8 @@ resource "aws_api_gateway_integration" "post_customer_integration" {
   integration_http_method = "POST"
   type                    = "HTTP_PROXY"
 
-  uri = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/customers"
-  content_handling        = "CONVERT_TO_TEXT"
+  uri              = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/customers"
+  content_handling = "CONVERT_TO_TEXT"
 
   request_templates = {
     "application/json" = jsonencode({
