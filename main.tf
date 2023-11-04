@@ -117,7 +117,7 @@ resource "aws_api_gateway_method" "get_variable_product_method" {
 
 resource "aws_api_gateway_method" "post_product_method" {
   rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
-  resource_id   = aws_api_gateway_resource.variable_id_product_resource.id
+  resource_id   = aws_api_gateway_resource.product_resource.id
   http_method   = "POST"
   authorization = "COGNITO_USER_POOLS"
   authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
