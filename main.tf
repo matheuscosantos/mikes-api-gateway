@@ -79,7 +79,6 @@ resource "aws_api_gateway_integration" "lambda_integration" {
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:644237782704:function:mikes_lambda_authorizer/invocations"
-  content_handling        = "CONVERT_TO_TEXT"
 }
 
 resource "aws_api_gateway_integration" "get_customer_integration" {
