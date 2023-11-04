@@ -48,9 +48,9 @@ resource "aws_api_gateway_method" "get_variable_customer_method" {
 }
 
 resource "aws_api_gateway_request_validator" "validator" {
-  name         = "validator"
-  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
-  validate_request_body = true
+  name                        = "validator"
+  rest_api_id                 = aws_api_gateway_rest_api.mikes_api_gateway.id
+  validate_request_body       = true
   validate_request_parameters = true
 }
 
@@ -79,6 +79,7 @@ resource "aws_api_gateway_integration" "lambda_integration" {
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:644237782704:function:mikes_lambda_authorizer/invocations"
+  content_handling        = "CONVERT_TO_TEXT"
 }
 
 resource "aws_api_gateway_integration" "get_customer_integration" {
@@ -88,7 +89,8 @@ resource "aws_api_gateway_integration" "get_customer_integration" {
   integration_http_method = "GET"
   type                    = "HTTP_PROXY"
   uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/customers/{cpf}"
-  request_parameters = {
+  content_handling        = "CONVERT_TO_TEXT"
+  request_parameters      = {
     "integration.request.path.cpf" = "method.request.path.cpf"
   }
 }
