@@ -384,7 +384,19 @@ resource "aws_api_gateway_authorizer" "cognito_authorizer" {
 }
 
 resource "aws_api_gateway_deployment" "mikes-api-gateway-deployment" {
-  depends_on  = [aws_api_gateway_integration.lambda_integration, aws_api_gateway_integration.get_customer_integration]
+  depends_on  = [
+    aws_api_gateway_integration.lambda_integration,
+    aws_api_gateway_integration.get_customer_integration,
+    aws_api_gateway_integration.post_customer_integration,
+    aws_api_gateway_integration.get_orders_integration,
+    aws_api_gateway_integration.post_orders_integration,
+    aws_api_gateway_integration.get_product_integration,
+    aws_api_gateway_integration.post_product_integration,
+    aws_api_gateway_integration.put_product_integration,
+    aws_api_gateway_integration.delete_product_integration,
+    aws_api_gateway_integration.get_orders_payment_order,
+    aws_api_gateway_integration.get_orders_payment_change_status_integration
+  ]
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
   stage_name  = "dev"
 }
