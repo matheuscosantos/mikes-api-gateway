@@ -68,7 +68,7 @@ resource "aws_api_gateway_resource" "orders_payment_resource" {
 
 resource "aws_api_gateway_resource" "orders_payment_change_status_resource" {
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
-  parent_id   = aws_api_gateway_rest_api.mikes_api_gateway.root_resource_id
+  parent_id   = aws_api_gateway_resource.orders_payment_resource.id
   path_part   = "{order}"
 }
 
