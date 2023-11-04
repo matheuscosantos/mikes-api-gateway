@@ -61,13 +61,13 @@ resource "aws_api_gateway_resource" "variable_id_product_resource" {
 
 resource "aws_api_gateway_resource" "orders_payment_resource" {
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
-  parent_id   = aws_api_gateway_resource.product_resource.id
+  parent_id   = aws_api_gateway_resource.orders_payment_resource.id
   path_part   = "orders-payment"
 }
 
 resource "aws_api_gateway_resource" "orders_payment_change_status_resource" {
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
-  parent_id   = aws_api_gateway_resource.product_resource.id
+  parent_id   = aws_api_gateway_resource.orders_payment_resource.id
   path_part   = "{order}"
 }
 
