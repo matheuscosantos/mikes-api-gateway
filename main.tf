@@ -47,6 +47,31 @@ resource "aws_api_gateway_method" "get_variable_customer_method" {
   }
 }
 
+resource "aws_api_gateway_request_validator" "validator" {
+  name         = "validator"
+  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
+  validate_request_body = true
+  validate_request_parameters = true
+}
+
+resource "aws_api_gateway_method" "post_customer_method" {
+  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id   = aws_api_gateway_resource.customer_resource.id
+  http_method   = "POST"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+
+  request_parameters = {
+    "method.request.path.cpf" = true
+  }
+
+  request_models = {
+    "application/json" = "Empty"
+  }
+
+  request_validator_id = aws_api_gateway_request_validator.validator.id
+}
+
 resource "aws_api_gateway_integration" "lambda_integration" {
   rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
   resource_id             = aws_api_gateway_resource.auth_resource.id
@@ -67,6 +92,25 @@ resource "aws_api_gateway_integration" "get_customer_integration" {
     "integration.request.path.cpf" = "method.request.path.cpf"
   }
 }
+
+resource "aws_api_gateway_integration" "post_customer_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id             = aws_api_gateway_resource.customer_resource.id
+  http_method             = aws_api_gateway_method.post_customer_method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+
+  uri = "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:644237782704:function:mikes_lambda_authorizer/invocations"
+
+  request_templates = {
+    "application/json" = jsonencode({
+      "cpf"   = "$input.json('$.cpf')",
+      "name"  = "$input.json('$.name')",
+      "email" = "$input.json('$.email')"
+    })
+  }
+}
+
 resource "aws_api_gateway_authorizer" "cognito_authorizer" {
   name            = "cognito-authorizer"
   rest_api_id     = aws_api_gateway_rest_api.mikes_api_gateway.id
