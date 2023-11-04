@@ -68,7 +68,7 @@ resource "aws_api_gateway_resource" "orders_payment_resource" {
 
 resource "aws_api_gateway_resource" "orders_payment_change_status_resource" {
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
-  parent_id   = aws_api_gateway_rest_api.mikes_api_gateway.root_resource_id
+  parent_id   = aws_api_gateway_resource.orders_payment_resource.id
   path_part   = "{order}"
 }
 
@@ -294,6 +294,11 @@ resource "aws_api_gateway_integration" "get_product_integration" {
   type                    = "HTTP_PROXY"
   uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/products/category"
   content_handling        = "CONVERT_TO_TEXT"
+
+  request_parameters      = {
+    "integration.request.querystring.value" = "method.request.querystring.value",
+    "integration.request.querystring.active" = "method.request.querystring.active"
+  }
 }
 
 resource "aws_api_gateway_integration" "post_product_integration" {
