@@ -199,12 +199,9 @@ resource "aws_api_gateway_method" "get_orders_payment_method" {
   request_models = {
     "application/json" = "Empty"
   }
-
   request_parameters = {
     "method.request.path.id" = true
   }
-
-  request_validator_id = aws_api_gateway_request_validator.validator.id
 }
 
 resource "aws_api_gateway_method" "post_orders_payment_webhook_process_method" {
@@ -216,8 +213,6 @@ resource "aws_api_gateway_method" "post_orders_payment_webhook_process_method" {
   request_models = {
     "application/json" = "Empty"
   }
-
-  request_validator_id = aws_api_gateway_request_validator.validator.id
 }
 
 resource "aws_api_gateway_integration" "lambda_integration" {
