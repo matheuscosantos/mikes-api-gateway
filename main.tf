@@ -39,9 +39,13 @@ resource "aws_api_gateway_method" "get_variable_customer_method" {
   rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
   resource_id   = aws_api_gateway_resource.variable_customer_resource.id
   http_method   = "GET"
-  authorization = "COGNITO_USER_POOLS"
-  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+  authorization = aws_api_gateway_authorizer.cognito_authorizer.id
+
+  request_parameters = {
+    "method.request.path.cpf" = true
+  }
 }
+
 
 resource "aws_api_gateway_integration" "lambda_integration" {
   rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
