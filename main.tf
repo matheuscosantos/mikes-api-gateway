@@ -145,10 +145,7 @@ resource "aws_api_gateway_integration" "get_orders_integration" {
   integration_http_method = "GET"
   type                    = "HTTP_PROXY"
   uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders"
-  content_handling        = "CONVERT_TO_TEXT"
-  request_parameters      = {
-    "integration.request.path.cpf" = "method.request.path.cpf"
-  }
+  content_handling        = "CONVERT_TO_TEXT"  
 }
 
 resource "aws_api_gateway_integration" "post_orders_integration" {
