@@ -191,7 +191,6 @@ resource "aws_api_gateway_method" "get_orders_payment_method" {
   http_method   = "GET"
   authorization = "COGNITO_USER_POOLS"
   authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
-  type          = "HTTP_PROXY"
   request_models = {
     "application/json" = "Empty"
   }
@@ -205,7 +204,6 @@ resource "aws_api_gateway_method" "post_orders_payment_webhook_process_method" {
   http_method   = "POST"
   authorization = "COGNITO_USER_POOLS"
   authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
-  type          = "HTTP_PROXY"
   request_models = {
     "application/json" = "Empty"
   }
