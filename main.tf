@@ -47,7 +47,6 @@ resource "aws_api_gateway_resource" "order_resource" {
   path_part   = "orders"
 }
 
-
 resource "aws_api_gateway_resource" "variable_product_resource" {
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
   parent_id   = aws_api_gateway_resource.product_resource.id
@@ -60,15 +59,21 @@ resource "aws_api_gateway_resource" "variable_id_product_resource" {
   path_part   = "{id}"
 }
 
-resource "aws_api_gateway_resource" "orders_payment_order_resource" {
+resource "aws_api_gateway_resource" "order_payments_resource" {
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
   parent_id   = aws_api_gateway_rest_api.mikes_api_gateway.root_resource_id
-  path_part   = "{orderId}"
+  path_part   = "orders-payment"
+}
+
+resource "aws_api_gateway_resource" "orders_payment_order_resource" {
+  rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
+  parent_id   = aws_api_gateway_resource.order_payments_resource.id
+  path_part   = "{id}"
 }
 
 resource "aws_api_gateway_resource" "orders_payment_webhook_process_resource" {
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
-  parent_id   = aws_api_gateway_rest_api.mikes_api_gateway.root_resource_id
+  parent_id   = aws_api_gateway_resource.order_payments_resource.id
   path_part   = "process"
 }
 
@@ -195,6 +200,10 @@ resource "aws_api_gateway_method" "get_orders_payment_method" {
     "application/json" = "Empty"
   }
 
+  request_parameters = {
+    "method.request.path.id" = true
+  }
+
   request_validator_id = aws_api_gateway_request_validator.validator.id
 }
 
@@ -206,10 +215,6 @@ resource "aws_api_gateway_method" "post_orders_payment_webhook_process_method" {
   authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
   request_models = {
     "application/json" = "Empty"
-  }
-
-  request_parameters = {
-    "method.request.path.order" = true
   }
 
   request_validator_id = aws_api_gateway_request_validator.validator.id
@@ -350,8 +355,12 @@ resource "aws_api_gateway_integration" "get_orders_payment_order" {
   http_method             = aws_api_gateway_method.get_orders_payment_method.http_method
   integration_http_method = "GET"
   type                    = "HTTP_PROXY"
-  uri = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders-payment/order/{orderId}"
+  uri = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders-payment/order/{id}"
   content_handling        = "CONVERT_TO_TEXT"
+
+  request_parameters = {
+    "integration.request.path.id" = "method.request.path.id"
+  }
 }
 
 resource "aws_api_gateway_integration" "get_orders_payment_change_status_integration" {
@@ -362,6 +371,13 @@ resource "aws_api_gateway_integration" "get_orders_payment_change_status_integra
   type                    = "HTTP_PROXY"
   uri = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders-payment/webhook/process"
   content_handling        = "CONVERT_TO_TEXT"
+
+  request_templates = {
+    "application/json" = jsonencode({
+      "orderId"        = "$input.json('$.orderId')",
+      "paid" = "$input.json('$.paid')"
+    })
+  }
 }
 
 resource "aws_api_gateway_authorizer" "cognito_authorizer" {
