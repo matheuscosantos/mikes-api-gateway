@@ -60,16 +60,16 @@ resource "aws_api_gateway_resource" "variable_id_product_resource" {
   path_part   = "{id}"
 }
 
-resource "aws_api_gateway_resource" "orders_payment_resource" {
+resource "aws_api_gateway_resource" "orders_payment_order_resource" {
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
   parent_id   = aws_api_gateway_rest_api.mikes_api_gateway.root_resource_id
-  path_part   = "orders-payment"
+  path_part   = "{orderId}"
 }
 
-resource "aws_api_gateway_resource" "orders_payment_change_status_resource" {
+resource "aws_api_gateway_resource" "orders_payment_webhook_process_resource" {
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
   parent_id   = aws_api_gateway_rest_api.mikes_api_gateway.root_resource_id
-  path_part   = "{order}"
+  path_part   = "process"
 }
 
 resource "aws_api_gateway_method" "auth_method" {
@@ -187,11 +187,11 @@ resource "aws_api_gateway_method" "post_customer_method" {
 
 resource "aws_api_gateway_method" "get_orders_payment_method" {
   rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
-  resource_id   = aws_api_gateway_resource.orders_payment_resource.id
+  resource_id   = aws_api_gateway_resource.orders_payment_order_resource.id
   http_method   = "GET"
   authorization = "COGNITO_USER_POOLS"
   authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
-
+  type          = "HTTP_PROXY"
   request_models = {
     "application/json" = "Empty"
   }
@@ -199,13 +199,13 @@ resource "aws_api_gateway_method" "get_orders_payment_method" {
   request_validator_id = aws_api_gateway_request_validator.validator.id
 }
 
-resource "aws_api_gateway_method" "get_orders_payment_change_status_method" {
+resource "aws_api_gateway_method" "post_orders_payment_webhook_process_method" {
   rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
-  resource_id   = aws_api_gateway_resource.orders_payment_change_status_resource.id
-  http_method   = "GET"
+  resource_id   = aws_api_gateway_resource.orders_payment_webhook_process_resource.id
+  http_method   = "POST"
   authorization = "COGNITO_USER_POOLS"
   authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
-
+  type          = "HTTP_PROXY"
   request_models = {
     "application/json" = "Empty"
   }
@@ -346,23 +346,23 @@ resource "aws_api_gateway_integration" "delete_product_integration" {
   }
 }
 
-resource "aws_api_gateway_integration" "get_orders_payment_integration" {
+resource "aws_api_gateway_integration" "get_orders_payment_order" {
   rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
-  resource_id             = aws_api_gateway_resource.orders_payment_resource.id
+  resource_id             = aws_api_gateway_resource.orders_payment_order_resource.id
   http_method             = aws_api_gateway_method.get_orders_payment_method.http_method
   integration_http_method = "GET"
   type                    = "HTTP_PROXY"
-  uri = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders-payment"
+  uri = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders-payment/order/{orderId}"
   content_handling        = "CONVERT_TO_TEXT"
 }
 
 resource "aws_api_gateway_integration" "get_orders_payment_change_status_integration" {
   rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
-  resource_id             = aws_api_gateway_resource.orders_payment_resource.id
-  http_method             = aws_api_gateway_method.get_orders_payment_change_status_method.http_method
-  integration_http_method = "GET"
+  resource_id             = aws_api_gateway_resource.orders_payment_webhook_process_resource.id
+  http_method             = aws_api_gateway_method.post_orders_payment_webhook_process_method.http_method
+  integration_http_method = "POST"
   type                    = "HTTP_PROXY"
-  uri = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders-payment/change-status/{order}"
+  uri = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders-payment/webhook/process"
   content_handling        = "CONVERT_TO_TEXT"
 }
 
