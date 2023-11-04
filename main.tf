@@ -291,12 +291,8 @@ resource "aws_api_gateway_integration" "get_product_integration" {
   http_method             = aws_api_gateway_method.get_variable_product_method.http_method
   integration_http_method = "GET"
   type                    = "HTTP_PROXY"
-  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/products"
+  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/products/category"
   content_handling        = "CONVERT_TO_TEXT"
-  request_parameters      = {
-    "integration.request.querystring.value"  = "method.request.querystring.value",
-    "integration.request.querystring.active" = "method.request.querystring.active",
-  }
 }
 
 resource "aws_api_gateway_integration" "post_product_integration" {
