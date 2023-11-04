@@ -245,6 +245,37 @@ resource "aws_api_gateway_integration" "post_customer_integration" {
   }
 }
 
+resource "aws_api_gateway_integration" "get_orders_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id             = aws_api_gateway_resource.order_resource.id
+  http_method             = aws_api_gateway_method.get_orders.http_method
+  integration_http_method = "GET"
+  type                    = "HTTP_PROXY"
+  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders"
+  content_handling        = "CONVERT_TO_TEXT"
+  request_parameters      = {
+    "integration.request.path.cpf" = "method.request.path.cpf"
+  }
+}
+
+resource "aws_api_gateway_integration" "post_orders_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id             = aws_api_gateway_resource.order_resource.id
+  http_method             = aws_api_gateway_method.post_orders.http_method
+  integration_http_method = "POST"
+  type                    = "HTTP_PROXY"
+
+  uri = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders"
+  content_handling        = "CONVERT_TO_TEXT"
+
+  request_templates = {
+    "application/json" = jsonencode({
+      cpf   = "$input.path('$.cpf')",
+      items = "$input.path('$.items')"  
+    })
+  }
+}
+
 resource "aws_api_gateway_integration" "get_orders_payment_integration" {
   rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
   resource_id             = aws_api_gateway_resource.orders_payment_resource.id
