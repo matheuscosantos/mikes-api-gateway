@@ -103,6 +103,7 @@ resource "aws_api_gateway_integration" "post_customer_integration" {
   type                    = "HTTP_PROXY"
 
   uri = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/customers/"
+  content_handling        = "CONVERT_TO_TEXT"
 
   request_templates = {
     "application/json" = jsonencode({
