@@ -39,7 +39,7 @@ resource "aws_api_gateway_method" "get_variable_customer_method" {
   rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
   resource_id   = aws_api_gateway_resource.variable_customer_resource.id
   http_method   = "GET"
-  authorization = "COGNITO_USER_POOLS"  
+  authorization = "COGNITO_USER_POOLS"
   authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
 }
 
@@ -58,7 +58,7 @@ resource "aws_api_gateway_integration" "get_customer_integration" {
   http_method             = aws_api_gateway_method.get_variable_customer_method.http_method
   integration_http_method = "GET"
   type                    = "HTTP_PROXY"
-  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/customers/{cpf}"
+  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/customers/{proxy+}"
 }
 
 resource "aws_api_gateway_authorizer" "cognito_authorizer" {
