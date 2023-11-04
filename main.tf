@@ -61,10 +61,6 @@ resource "aws_api_gateway_method" "post_customer_method" {
   authorization = "COGNITO_USER_POOLS"
   authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
 
-  request_parameters = {
-    "method.request.path.cpf" = true
-  }
-
   request_models = {
     "application/json" = "Empty"
   }
