@@ -59,6 +59,18 @@ resource "aws_api_gateway_resource" "variable_id_product_resource" {
   path_part   = "{id}"
 }
 
+resource "aws_api_gateway_resource" "orders_payment_resource" {
+  rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
+  parent_id   = aws_api_gateway_resource.product_resource.id
+  path_part   = "orders-payment"
+}
+
+resource "aws_api_gateway_resource" "orders_payment_change_status_resource" {
+  rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
+  parent_id   = aws_api_gateway_resource.product_resource.id
+  path_part   = "{order}"
+}
+
 resource "aws_api_gateway_method" "auth_method" {
   rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
   resource_id   = aws_api_gateway_resource.auth_resource.id
@@ -167,6 +179,38 @@ resource "aws_api_gateway_method" "post_customer_method" {
 
   request_models = {
     "application/json" = "Empty"
+  }
+
+  request_validator_id = aws_api_gateway_request_validator.validator.id
+}
+
+resource "aws_api_gateway_method" "get_orders_payment_method" {
+  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id   = aws_api_gateway_resource.orders_payment_resource.id
+  http_method   = "GET"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+
+  request_models = {
+    "application/json" = "Empty"
+  }
+
+  request_validator_id = aws_api_gateway_request_validator.validator.id
+}
+
+resource "aws_api_gateway_method" "get_orders_payment_change_status_method" {
+  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id   = aws_api_gateway_resource.orders_payment_change_status_resource.id
+  http_method   = "GET"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+
+  request_models = {
+    "application/json" = "Empty"
+  }
+
+  request_parameters = {
+    "method.request.path.order" = true
   }
 
   request_validator_id = aws_api_gateway_request_validator.validator.id
@@ -303,6 +347,26 @@ resource "aws_api_gateway_integration" "delete_product_integration" {
   request_parameters = {
     "integration.request.path.id" = "method.request.path.id"
   }
+}
+
+resource "aws_api_gateway_integration" "get_orders_payment_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id             = aws_api_gateway_resource.orders_payment_resource.id
+  http_method             = aws_api_gateway_method.get_orders_payment_method.http_method
+  integration_http_method = "GET"
+  type                    = "HTTP_PROXY"
+  uri = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders-payment"
+  content_handling        = "CONVERT_TO_TEXT"
+}
+
+resource "aws_api_gateway_integration" "get_orders_payment_change_status_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id             = aws_api_gateway_resource.orders_payment_resource.id
+  http_method             = aws_api_gateway_method.get_orders_payment_change_status_method.http_method
+  integration_http_method = "GET"
+  type                    = "HTTP_PROXY"
+  uri = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders-payment/change-status/{order}"
+  content_handling        = "CONVERT_TO_TEXT"
 }
 
 resource "aws_api_gateway_authorizer" "cognito_authorizer" {
