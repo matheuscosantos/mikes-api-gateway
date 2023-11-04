@@ -55,7 +55,7 @@ resource "aws_api_gateway_integration" "lambda_integration" {
 resource "aws_api_gateway_integration" "get_customer_integration" {
   rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
   resource_id             = aws_api_gateway_resource.variable_customer_resource.id
-  http_method             = aws_api_gateway_method.get_customer_method.http_method
+  http_method             = aws_api_gateway_method.get_variable_customer_method.http_method
   integration_http_method = "GET"
   type                    = "HTTP_PROXY"
   uri                     = "http://10.0.19.66:8080/customers/{cpf}"
