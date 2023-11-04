@@ -122,7 +122,7 @@ resource "aws_api_gateway_method" "get_variable_product_method" {
 
   request_parameters = {
     "method.request.querystring.value"  = true,
-    "method.request.querystring.active" = true
+    "method.request.querystring.active" = false
   }
 
   request_validator_id = aws_api_gateway_request_validator.validator.id
