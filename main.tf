@@ -18,14 +18,14 @@ resource "aws_api_gateway_resource" "auth_resource" {
 
 resource "aws_api_gateway_resource" "customer_resource" {
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
-  parent_id   = aws_api_gateway_resource.auth_resource.id
+  parent_id   = aws_api_gateway_rest_api.mikes_api_gateway.root_resource_id
   path_part   = "customers"
 }
 
 resource "aws_api_gateway_resource" "variable_customer_resource" {
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
   parent_id   = aws_api_gateway_resource.customer_resource.id
-  path_part   = "{customer_id}"
+  path_part   = "{cpf}"
 }
 
 resource "aws_api_gateway_method" "auth_method" {
@@ -33,14 +33,6 @@ resource "aws_api_gateway_method" "auth_method" {
   resource_id   = aws_api_gateway_resource.auth_resource.id
   http_method   = "POST"
   authorization = "NONE"
-}
-
-resource "aws_api_gateway_method" "get_customer_method" {
-  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
-  resource_id   = aws_api_gateway_resource.customer_resource.id
-  http_method   = "GET"
-  authorization = "COGNITO_USER_POOLS"  
-    authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
 }
 
 resource "aws_api_gateway_method" "get_variable_customer_method" {
@@ -66,7 +58,7 @@ resource "aws_api_gateway_integration" "get_customer_integration" {
   http_method             = aws_api_gateway_method.get_customer_method.http_method
   integration_http_method = "GET"
   type                    = "HTTP_PROXY"
-  uri                     = "http://10.0.19.66:8080/customers/{customer_id}"
+  uri                     = "http://10.0.19.66:8080/customers/{cpf}"
 }
 
 resource "aws_api_gateway_authorizer" "cognito_authorizer" {
