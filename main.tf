@@ -30,7 +30,7 @@ resource "aws_api_gateway_authorizer" "cognito_authorizer" {
 }
 
 resource "aws_api_gateway_deployment" "mikes-api-gateway-deployment" {
-  depends_on  = [
+  depends_on = [
     aws_api_gateway_integration.lambda_integration,
     aws_api_gateway_integration.get_customer_integration,
     aws_api_gateway_integration.post_customer_integration,
@@ -41,7 +41,8 @@ resource "aws_api_gateway_deployment" "mikes-api-gateway-deployment" {
     aws_api_gateway_integration.put_product_integration,
     aws_api_gateway_integration.delete_product_integration,
     aws_api_gateway_integration.get_orders_payment_order,
-    aws_api_gateway_integration.get_orders_payment_change_status_integration
+    aws_api_gateway_integration.get_orders_payment_change_status_integration,
+    aws_api_gateway_integration.post_production_status_integration
   ]
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
   stage_name  = "dev"
@@ -195,8 +196,8 @@ resource "aws_api_gateway_integration" "post_orders_integration" {
   integration_http_method = "POST"
   type                    = "HTTP_PROXY"
 
-  uri = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders"
-  content_handling        = "CONVERT_TO_TEXT"
+  uri              = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders"
+  content_handling = "CONVERT_TO_TEXT"
 
   request_templates = {
     "application/json" = jsonencode({
@@ -378,22 +379,22 @@ resource "aws_api_gateway_resource" "orders_payment_webhook_process_resource" {
 }
 
 resource "aws_api_gateway_method" "post_orders_payment_webhook_process_method" {
-  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
-  resource_id   = aws_api_gateway_resource.orders_payment_webhook_process_resource.id
-  http_method   = "POST"
-  authorization = "COGNITO_USER_POOLS"
-  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+  rest_api_id    = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id    = aws_api_gateway_resource.orders_payment_webhook_process_resource.id
+  http_method    = "POST"
+  authorization  = "COGNITO_USER_POOLS"
+  authorizer_id  = aws_api_gateway_authorizer.cognito_authorizer.id
   request_models = {
     "application/json" = "Empty"
   }
 }
 
 resource "aws_api_gateway_method" "get_orders_payment_method" {
-  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
-  resource_id   = aws_api_gateway_resource.orders_payment_order_resource.id
-  http_method   = "GET"
-  authorization = "COGNITO_USER_POOLS"
-  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+  rest_api_id    = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id    = aws_api_gateway_resource.orders_payment_order_resource.id
+  http_method    = "GET"
+  authorization  = "COGNITO_USER_POOLS"
+  authorizer_id  = aws_api_gateway_authorizer.cognito_authorizer.id
   request_models = {
     "application/json" = "Empty"
   }
@@ -408,13 +409,13 @@ resource "aws_api_gateway_integration" "get_orders_payment_change_status_integra
   http_method             = aws_api_gateway_method.post_orders_payment_webhook_process_method.http_method
   integration_http_method = "POST"
   type                    = "HTTP_PROXY"
-  uri = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders-payment/webhook/process"
+  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders-payment/webhook/process"
   content_handling        = "CONVERT_TO_TEXT"
 
   request_templates = {
     "application/json" = jsonencode({
-      "orderId"        = "$input.json('$.orderId')",
-      "paid" = "$input.json('$.paid')"
+      "orderId" = "$input.json('$.orderId')",
+      "paid"    = "$input.json('$.paid')"
     })
   }
 }
@@ -425,10 +426,58 @@ resource "aws_api_gateway_integration" "get_orders_payment_order" {
   http_method             = aws_api_gateway_method.get_orders_payment_method.http_method
   integration_http_method = "GET"
   type                    = "HTTP_PROXY"
-  uri = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders-payment/order/{id}"
+  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders-payment/order/{id}"
   content_handling        = "CONVERT_TO_TEXT"
 
   request_parameters = {
     "integration.request.path.id" = "method.request.path.id"
+  }
+}
+
+# -- ------------------------------------------------------
+# -- route production-history
+# -- ------------------------------------------------------
+
+resource "aws_api_gateway_resource" "production_resource" {
+  rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
+  parent_id   = aws_api_gateway_rest_api.mikes_api_gateway.root_resource_id
+  path_part   = "production"
+}
+
+resource "aws_api_gateway_resource" "update_production_status_resource" {
+  rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
+  parent_id   = aws_api_gateway_resource.production_resource.id
+  path_part   = "production-history"
+}
+
+resource "aws_api_gateway_method" "post_production_status_method" {
+  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id   = aws_api_gateway_resource.update_production_status_resource.id
+  http_method   = "POST"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+
+  request_models = {
+    "application/json" = "Empty"
+  }
+
+  request_validator_id = aws_api_gateway_request_validator.validator.id
+}
+
+resource "aws_api_gateway_integration" "post_production_status_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id             = aws_api_gateway_resource.update_production_status_resource.id
+  http_method             = aws_api_gateway_method.post_production_status_method.http_method
+  integration_http_method = "POST"
+  type                    = "HTTP_PROXY"
+
+  uri              = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8085/production-history"
+  content_handling = "CONVERT_TO_TEXT"
+
+  request_templates = {
+    "application/json" = jsonencode({
+      "status"  = "$input.json('$.status')",
+      "orderId" = "$input.json('$.orderId')"
+    })
   }
 }
