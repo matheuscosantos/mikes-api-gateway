@@ -441,18 +441,12 @@ resource "aws_api_gateway_integration" "get_orders_payment_order" {
 resource "aws_api_gateway_resource" "production_resource" {
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
   parent_id   = aws_api_gateway_rest_api.mikes_api_gateway.root_resource_id
-  path_part   = "production"
-}
-
-resource "aws_api_gateway_resource" "update_production_status_resource" {
-  rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
-  parent_id   = aws_api_gateway_resource.production_resource.id
   path_part   = "production-history"
 }
 
 resource "aws_api_gateway_method" "post_production_status_method" {
   rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
-  resource_id   = aws_api_gateway_resource.update_production_status_resource.id
+  resource_id   = aws_api_gateway_resource.production_resource.id
   http_method   = "POST"
   authorization = "COGNITO_USER_POOLS"
   authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
@@ -460,13 +454,11 @@ resource "aws_api_gateway_method" "post_production_status_method" {
   request_models = {
     "application/json" = "Empty"
   }
-
-  request_validator_id = aws_api_gateway_request_validator.validator.id
 }
 
 resource "aws_api_gateway_integration" "post_production_status_integration" {
   rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
-  resource_id             = aws_api_gateway_resource.update_production_status_resource.id
+  resource_id             = aws_api_gateway_resource.production_resource.id
   http_method             = aws_api_gateway_method.post_production_status_method.http_method
   integration_http_method = "POST"
   type                    = "HTTP_PROXY"
