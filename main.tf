@@ -238,10 +238,12 @@ resource "aws_api_gateway_integration" "get_order_by_id_integration" {
   integration_http_method = "GET"
   type                    = "HTTP_PROXY"
   
-  # Usando a interpolação para incluir o orderId na URI
   uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders/${aws_api_gateway_resource.order_by_id_resource.path_part}"
   
   content_handling        = "CONVERT_TO_TEXT"
+    request_parameters      = {
+    "integration.request.path.orderId" = "method.request.path.orderId"
+  }
 }
 # -- ------------------------------------------------------
 # -- route products
