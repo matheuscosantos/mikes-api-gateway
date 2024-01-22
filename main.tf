@@ -229,6 +229,9 @@ resource "aws_api_gateway_method" "get_order_by_id" {
   http_method   = "GET"
   authorization = "COGNITO_USER_POOLS"
   authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+    request_parameters = {
+    "method.request.path.orderId" = true
+  }
 }
 
 resource "aws_api_gateway_integration" "get_order_by_id_integration" {
@@ -238,8 +241,7 @@ resource "aws_api_gateway_integration" "get_order_by_id_integration" {
   integration_http_method = "GET"
   type                    = "HTTP_PROXY"
   
-  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders/${aws_api_gateway_resource.order_by_id_resource.path_part}"
-  
+  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders/{orderId}"  
   content_handling        = "CONVERT_TO_TEXT"
     request_parameters      = {
     "integration.request.path.orderId" = "method.request.path.orderId"
