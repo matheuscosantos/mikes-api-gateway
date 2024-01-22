@@ -454,6 +454,8 @@ resource "aws_api_gateway_method" "post_production_status_method" {
   request_models = {
     "application/json" = "Empty"
   }
+
+  request_validator_id = aws_api_gateway_request_validator.validator.id
 }
 
 resource "aws_api_gateway_integration" "post_production_status_integration" {
