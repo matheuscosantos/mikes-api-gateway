@@ -384,6 +384,7 @@ resource "aws_api_gateway_method" "post_orders_payment_webhook_process_method" {
   http_method    = "POST"
   authorization  = "COGNITO_USER_POOLS"
   authorizer_id  = aws_api_gateway_authorizer.cognito_authorizer.id
+  request_validator_id = aws_api_gateway_request_validator.validator.id
   request_models = {
     "application/json" = "Empty"
   }
