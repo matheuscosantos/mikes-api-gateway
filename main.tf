@@ -409,7 +409,7 @@ resource "aws_api_gateway_integration" "get_orders_payment_change_status_integra
   http_method             = aws_api_gateway_method.post_orders_payment_webhook_process_method.http_method
   integration_http_method = "POST"
   type                    = "HTTP_PROXY"
-  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders-payment/webhook/process"
+  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8050/orders-payment/webhook/process"
   content_handling        = "CONVERT_TO_TEXT"
 
   request_templates = {
@@ -426,7 +426,7 @@ resource "aws_api_gateway_integration" "get_orders_payment_order" {
   http_method             = aws_api_gateway_method.get_orders_payment_method.http_method
   integration_http_method = "GET"
   type                    = "HTTP_PROXY"
-  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders-payment/order/{id}"
+  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8050/orders-payment/order/{id}"
   content_handling        = "CONVERT_TO_TEXT"
 
   request_parameters = {
