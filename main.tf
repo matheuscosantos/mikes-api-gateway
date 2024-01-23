@@ -221,7 +221,7 @@ resource "aws_api_gateway_integration" "get_orders_integration" {
 resource "aws_api_gateway_resource" "order_by_id_resource" {
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
   parent_id   = aws_api_gateway_resource.order_resource.id
-  path_part   = "{orderId}"
+  path_part   = "{id}"
 }
 
 resource "aws_api_gateway_method" "get_order_by_id" {
@@ -231,7 +231,7 @@ resource "aws_api_gateway_method" "get_order_by_id" {
   authorization = "COGNITO_USER_POOLS"
   authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
     request_parameters = {
-    "method.request.path.orderId" = true
+    "method.request.path.id" = true
   }
 }
 
@@ -242,10 +242,10 @@ resource "aws_api_gateway_integration" "get_order_by_id_integration" {
   integration_http_method = "GET"
   type                    = "HTTP_PROXY"
   
-  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders/{orderId}"  
+  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders/{id}"  
   content_handling        = "CONVERT_TO_TEXT"
     request_parameters      = {
-    "integration.request.path.orderId" = "method.request.path.orderId"
+    "integration.request.path.id" = "method.request.path.id"
   }
 }
 # -- ------------------------------------------------------
