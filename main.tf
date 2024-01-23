@@ -42,7 +42,8 @@ resource "aws_api_gateway_deployment" "mikes-api-gateway-deployment" {
     aws_api_gateway_integration.delete_product_integration,
     aws_api_gateway_integration.get_orders_payment_order,
     aws_api_gateway_integration.get_orders_payment_change_status_integration,
-    aws_api_gateway_integration.post_production_status_integration
+    aws_api_gateway_integration.post_production_status_integration,
+    aws_api_gateway_integration.aws_api_gateway_integration.get_order_by_id_integration
   ]
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
   stage_name  = "dev"
