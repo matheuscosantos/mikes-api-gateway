@@ -34,6 +34,7 @@ resource "aws_api_gateway_deployment" "mikes-api-gateway-deployment" {
     aws_api_gateway_integration.lambda_integration,
     aws_api_gateway_integration.get_customer_integration,
     aws_api_gateway_integration.post_customer_integration,
+    aws_api_gateway_integration.delete_variable_customer_integration,
     aws_api_gateway_integration.get_orders_integration,
     aws_api_gateway_integration.post_orders_integration,
     aws_api_gateway_integration.get_product_integration,
@@ -97,7 +98,7 @@ resource "aws_api_gateway_resource" "customer_resource" {
 resource "aws_api_gateway_resource" "variable_customer_resource" {
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
   parent_id   = aws_api_gateway_resource.customer_resource.id
-  path_part   = "{cpf}"
+  path_part   = "{id}"
 }
 
 resource "aws_api_gateway_method" "post_customer_method" {
@@ -122,8 +123,22 @@ resource "aws_api_gateway_method" "get_variable_customer_method" {
   authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
 
   request_parameters = {
-    "method.request.path.cpf" = true
+    "method.request.path.id" = true
   }
+}
+
+resource "aws_api_gateway_method" "delete_variable_customer_method" {
+  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id   = aws_api_gateway_resource.variable_customer_resource.id
+  http_method   = "DELETE"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+
+  request_parameters = {
+    "method.request.path.id" = true
+  }
+
+  request_validator_id = aws_api_gateway_request_validator.validator.id
 }
 
 resource "aws_api_gateway_integration" "post_customer_integration" {
@@ -151,10 +166,25 @@ resource "aws_api_gateway_integration" "get_customer_integration" {
   http_method             = aws_api_gateway_method.get_variable_customer_method.http_method
   integration_http_method = "GET"
   type                    = "HTTP_PROXY"
-  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/customers/{cpf}"
+  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/customers/{id}"
   content_handling        = "CONVERT_TO_TEXT"
   request_parameters      = {
-    "integration.request.path.cpf" = "method.request.path.cpf"
+    "integration.request.path.id" = "method.request.path.id"
+  }
+}
+
+resource "aws_api_gateway_integration" "delete_variable_customer_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id             = aws_api_gateway_resource.variable_customer_resource.id
+  http_method             = aws_api_gateway_method.delete_variable_customer_method.http_method
+  integration_http_method = "DELETE"
+  type                    = "HTTP_PROXY"
+
+  uri              = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/customers/{id}"
+  content_handling = "CONVERT_TO_TEXT"
+
+  request_parameters = {
+    "integration.request.path.id" = "method.request.path.id"
   }
 }
 
@@ -166,6 +196,12 @@ resource "aws_api_gateway_resource" "order_resource" {
   rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
   parent_id   = aws_api_gateway_rest_api.mikes_api_gateway.root_resource_id
   path_part   = "orders"
+}
+
+resource "aws_api_gateway_resource" "order_by_id_resource" {
+  rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
+  parent_id   = aws_api_gateway_resource.order_resource.id
+  path_part   = "{id}"
 }
 
 resource "aws_api_gateway_method" "post_orders" {
@@ -180,6 +216,17 @@ resource "aws_api_gateway_method" "post_orders" {
   }
 
   request_validator_id = aws_api_gateway_request_validator.validator.id
+}
+
+resource "aws_api_gateway_method" "get_order_by_id" {
+  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id   = aws_api_gateway_resource.order_by_id_resource.id
+  http_method   = "GET"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+    request_parameters = {
+    "method.request.path.id" = true
+  }
 }
 
 resource "aws_api_gateway_method" "get_orders" {
@@ -202,9 +249,23 @@ resource "aws_api_gateway_integration" "post_orders_integration" {
 
   request_templates = {
     "application/json" = jsonencode({
-      cpf   = "$input.path('$.cpf')",
+      customerId = "$input.path('$.customerId')",
       items = "$input.path('$.items')"
     })
+  }
+}
+
+resource "aws_api_gateway_integration" "get_order_by_id_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
+  resource_id             = aws_api_gateway_resource.order_by_id_resource.id
+  http_method             = aws_api_gateway_method.get_order_by_id.http_method
+  integration_http_method = "GET"
+  type                    = "HTTP_PROXY"
+
+  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders/{id}"
+  content_handling        = "CONVERT_TO_TEXT"
+    request_parameters      = {
+    "integration.request.path.id" = "method.request.path.id"
   }
 }
 
@@ -218,36 +279,6 @@ resource "aws_api_gateway_integration" "get_orders_integration" {
   content_handling        = "CONVERT_TO_TEXT"
 }
 
-resource "aws_api_gateway_resource" "order_by_id_resource" {
-  rest_api_id = aws_api_gateway_rest_api.mikes_api_gateway.id
-  parent_id   = aws_api_gateway_resource.order_resource.id
-  path_part   = "{id}"
-}
-
-resource "aws_api_gateway_method" "get_order_by_id" {
-  rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
-  resource_id   = aws_api_gateway_resource.order_by_id_resource.id
-  http_method   = "GET"
-  authorization = "COGNITO_USER_POOLS"
-  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
-    request_parameters = {
-    "method.request.path.id" = true
-  }
-}
-
-resource "aws_api_gateway_integration" "get_order_by_id_integration" {
-  rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
-  resource_id             = aws_api_gateway_resource.order_by_id_resource.id
-  http_method             = aws_api_gateway_method.get_order_by_id.http_method
-  integration_http_method = "GET"
-  type                    = "HTTP_PROXY"
-  
-  uri                     = "http://mikes-ecs-alb-1631856801.us-east-2.elb.amazonaws.com:8080/orders/{id}"  
-  content_handling        = "CONVERT_TO_TEXT"
-    request_parameters      = {
-    "integration.request.path.id" = "method.request.path.id"
-  }
-}
 # -- ------------------------------------------------------
 # -- route products
 # -- ------------------------------------------------------
@@ -284,7 +315,7 @@ resource "aws_api_gateway_method" "post_product_method" {
   request_validator_id = aws_api_gateway_request_validator.validator.id
 }
 
-resource "aws_api_gateway_method" "put_variable_customer_method" {
+resource "aws_api_gateway_method" "put_variable_product_method" {
   rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
   resource_id   = aws_api_gateway_resource.variable_id_product_resource.id
   http_method   = "PUT"
@@ -313,7 +344,7 @@ resource "aws_api_gateway_method" "get_variable_product_method" {
   request_validator_id = aws_api_gateway_request_validator.validator.id
 }
 
-resource "aws_api_gateway_method" "delete_variable_customer_method" {
+resource "aws_api_gateway_method" "delete_variable_product_method" {
   rest_api_id   = aws_api_gateway_rest_api.mikes_api_gateway.id
   resource_id   = aws_api_gateway_resource.variable_id_product_resource.id
   http_method   = "DELETE"
@@ -350,7 +381,7 @@ resource "aws_api_gateway_integration" "post_product_integration" {
 resource "aws_api_gateway_integration" "put_product_integration" {
   rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
   resource_id             = aws_api_gateway_resource.variable_id_product_resource.id
-  http_method             = aws_api_gateway_method.put_variable_customer_method.http_method
+  http_method             = aws_api_gateway_method.put_variable_product_method.http_method
   integration_http_method = "PUT"
   type                    = "HTTP_PROXY"
 
@@ -375,7 +406,7 @@ resource "aws_api_gateway_integration" "get_product_integration" {
 resource "aws_api_gateway_integration" "delete_product_integration" {
   rest_api_id             = aws_api_gateway_rest_api.mikes_api_gateway.id
   resource_id             = aws_api_gateway_resource.variable_id_product_resource.id
-  http_method             = aws_api_gateway_method.delete_variable_customer_method.http_method
+  http_method             = aws_api_gateway_method.delete_variable_product_method.http_method
   integration_http_method = "DELETE"
   type                    = "HTTP_PROXY"
 
