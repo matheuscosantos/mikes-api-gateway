@@ -34,6 +34,7 @@ resource "aws_api_gateway_deployment" "mikes-api-gateway-deployment" {
     aws_api_gateway_integration.lambda_integration,
     aws_api_gateway_integration.get_customer_integration,
     aws_api_gateway_integration.post_customer_integration,
+    aws_api_gateway_integration.delete_variable_customer_integration,
     aws_api_gateway_integration.get_orders_integration,
     aws_api_gateway_integration.post_orders_integration,
     aws_api_gateway_integration.get_product_integration,
