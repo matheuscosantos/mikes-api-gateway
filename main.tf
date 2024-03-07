@@ -325,8 +325,6 @@ resource "aws_api_gateway_method" "put_variable_id_product_method" {
   request_parameters = {
     "method.request.path.id" = true
   }
-
-  request_validator_id = aws_api_gateway_request_validator.validator.id
 }
 
 resource "aws_api_gateway_method" "get_variable_product_method" {
